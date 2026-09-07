@@ -1,4 +1,3 @@
-```yaml
 name: Gerar APK
 
 on:
@@ -26,7 +25,7 @@ jobs:
       - name: Criar pasta web
         run: |
           mkdir www
-          cp -r ./*.html ./www/ 2>/dev/null || true
+          cp ./*.html ./www/ 2>/dev/null || true
           cp -r ./css ./www/ 2>/dev/null || true
           cp -r ./js ./www/ 2>/dev/null || true
           cp -r ./images ./www/ 2>/dev/null || true
@@ -64,4 +63,3 @@ jobs:
         with:
           name: Almeida-App-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-```
