@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Mínimo</title>
+    <style>
+        body { font-family: Arial; padding: 16px; max-width: 500px; margin: 0 auto; }
+        button { padding: 12px 20px; margin: 4px; border: none; border-radius: 8px; background: #1a237e; color: white; font-size: 1rem; cursor: pointer; }
+        .card { background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 12px 0; }
+        video { width: 100%; border-radius: 8px; background: #000; }
+        #gps-info, #sensores-info { background: #e8e8e8; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; min-height: 60px; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; background: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .tab-bar button { flex: 1; background: transparent; color: #333; font-size: 0.8rem; padding: 8px; }
+        .tab-bar button.ativo { background: #1a237e; color: white; }
+        .tab { display: none; }
+        .tab.ativo { display: block; }
+        .status { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; }
+        .verde { background: #4CAF50; color: white; }
+        .vermelho { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+
+    <h2>📱 App Mínimo</h2>
+
+    <!-- MENU -->
+    <div class="tab-bar">
+        <button class="ativo" onclick="abrirTab('tab-home')">🏠</button>
+        <button onclick="abrirTab('tab-camera')">📷</button>
+        <button onclick="abrirTab('tab-gps')">📍</button>
+        <button onclick="abrirTab('tab-sensores')">📱</button>
+    </div>
+
+    <!-- HOME -->
+    <div id="tab-home" class="tab ativo">
+        <div class="card">
+            <h3>⚓ Portos</h3>
+            <div id="lista"></div>
+        </div>
+    </div>
+
+    <!-- CÂMERA -->
+    <div id="tab-camera" class="tab">
+        <div class="card">
+            <video id="video" autoplay playsinline></video>
+            <div style="margin-top:8px;">
+                <button onclick="alternarCamera()">🔁 Virar</button>
+                <button onclick="capturarFoto()">📸 Foto</button>
+                <button onclick="pararCamera()">⏹ Parar</button>
+            </div>
+            <img id="preview" style="display:none; width:100%; margin-top:8px; border-radius:8px;" />
+            <canvas id="canvas" style="display:none;"></canvas>
+        </div>
+    </div>
+
+    <!-- GPS -->
+    <div id="tab-gps" class="tab">
+        <div class="card">
+            <h3>📍 Localização</h3>
+            <button onclick="buscarGPS()">📍 Buscar</button>
+            <button onclick="rastrearGPS()">👁️ Rastrear</button>
+            <div id="gps-info">Clique em "Buscar"</div>
+        </div>
+    </div>
+
+    <!-- SENSORES -->
+    <div id="tab-sensores" class="tab">
+        <div class="card">
+            <h3>📱 Sensores</h3>
+            <div>
+                <span id="status-acel" class="status vermelho">⏹ Acel</span>
+                <span id="status-giro" class="status vermelho">⏹ Giro</span>
+            </div>
+            <button onclick="iniciarSensores()">▶ Iniciar</button>
+            <button onclick="pararSensores()">⏹ Parar</button>
+            <div id="sensores-info">Clique em "Iniciar"</div>
+        </div>
+    </div>
+
+    <script>
+        // ====================================================
+        // NAVEGAÇÃO
+        // ====================================================
+        function abrirTab(id) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('ativo'));
+            document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('ativo'));
+            document.getElementById(id).classList.add('ativo');
+            event.target.classList.add('ativo');
+        }
+
+        // ====================================================
+        // 1. PORTOS (JSON)
+        // ====================================================
+        const portos = [
+            { nome: 'Porto de Santos', local: 'Santos, SP' },
+            { nome: 'Porto do Rio', local: 'Rio de Janeiro, RJ' },
+            { nome: 'Porto de Paranaguá', local: 'Paranaguá, PR' }
+        ];
+
+        document.getElementById('lista').innerHTML = portos.map(p =>
+            `<div style="padding:8px;border-bottom:1px solid #ddd;"><b>${p.nome}</b><br>📍 ${p.local}</div>`
+        ).join('');
+
+        // ====================================================
+        // 2. CÂMERA
+        // ====================================================
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const preview = document.getElementById('preview');
+        let stream = null;
+        let frente = false;
+
+        async function iniciarCamera() {
+            try {
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: frente ? 'user' : 'environment' }
+                });
+                video.srcObject = stream;
+            } catch (e) { alert('Erro: ' + e.message); }
+        }
+
+        function alternarCamera() { frente = !frente;
+            iniciarCamera(); }
+
+        function capturarFoto() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            preview.src = canvas.toDataURL('image/jpeg');
+            preview.style.display = 'block';
+        }
+
+        function pararCamera() {
+            if (stream) { stream.getTracks().forEach(t => t.stop());
+                stream = null;
+                video.srcObject = null; }
+        }
+
+        iniciarCamera();
+
+        // ====================================================
+        // 3. GPS
+        // ====================================================
+        let watchGPS = null;
+
+        function buscarGPS() {
+            if (watchGPS) { navigator.geolocation.clearWatch(watchGPS);
+                watchGPS = null; }
+            if (!navigator.geolocation) { document.getElementById('gps-info').textContent = '❌ GPS não suportado'; return; }
+            document.getElementById('gps-info').textContent = '⏳ Buscando...';
+            navigator.geolocation.getCurrentPosition(
+                p => { document.getElementById('gps-info').textContent =
+                        `📍 ${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}\nPrecisão: ${p.coords.accuracy}m` },
+                e => { document.getElementById('gps-info').textContent = '❌ ' + e.message }
+            );
+        }
+
+        function rastrearGPS() {
+            if (watchGPS) {
+                navigator.geolocation.clearWatch(watchGPS);
+                watchGPS = null;
+                document.getElementById('gps-info').textContent = '⏹ Rastreamento parado';
+                return;
+            }
+            document.getElementById('gps-info').textContent = '👁️ Rastreando...';
+            watchGPS = navigator.geolocation.watchPosition(
+                p => { document.getElementById('gps-info').textContent =
+                        `📍 ${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}` },
+                e => { document.getElementById('gps-info').textContent = '❌ ' + e.message }
+            );
+        }
+
+        // ====================================================
+        // 4. SENSORES
+        // ====================================================
+        let sensoresAtivos = false;
+
+        function handleMotion(e) {
+            if (!sensoresAtivos) return;
+            const a = e.acceleration;
+            const r = e.rotationRate;
+            let txt = '';
+            if (a) {
+                txt += `📊 Acel: X:${(a.x||0).toFixed(1)} Y:${(a.y||0).toFixed(1)} Z:${(a.z||0).toFixed(1)}\n`;
+                document.getElementById('status-acel').className = 'status verde';
+                document.getElementById('status-acel').textContent = '✅ Acel';
+            }
+            if (r) {
+                txt += `🔄 Giro: α:${(r.alpha||0).toFixed(1)} β:${(r.beta||0).toFixed(1)} γ:${(r.gamma||0).toFixed(1)}`;
+                document.getElementById('status-giro').className = 'status verde';
+                document.getElementById('status-giro').textContent = '✅ Giro';
+            }
+            document.getElementById('sensores-info').textContent = txt || 'Aguardando...';
+        }
+
+        async function iniciarSensores() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
+                const r = await DeviceOrientationEvent.requestPermission();
+                if (r !== 'granted') { document.getElementById('sensores-info').textContent = '❌ Permissão negada'; return; }
+            }
+            sensoresAtivos = true;
+            window.addEventListener('devicemotion', handleMotion);
+            document.getElementById('sensores-info').textContent = '⏳ Aguardando...';
+        }
+
+        function pararSensores() {
+            sensoresAtivos = false;
+            window.removeEventListener('devicemotion', handleMotion);
+            document.getElementById('sensores-info').textContent = '⏹ Parado';
+            document.getElementById('status-acel').className = 'status vermelho';
+            document.getElementById('status-acel').textContent = '⏹ Acel';
+            document.getElementById('status-giro').className = 'status vermelho';
+            document.getElementById('status-giro').textContent = '⏹ Giro';
+        }
+    </script>
+</body>
+</html>
