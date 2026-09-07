@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi App - Sensores Corrigidos</title>
+    <title>Multi App - Chrome Android</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,16 +13,6 @@
             padding: 16px;
             max-width: 500px;
             margin: 0 auto;
-        }
-        .alerta-https {
-            background: #ffeb3b;
-            color: #333;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            margin-bottom: 12px;
-            border-left: 5px solid #f57c00;
-            display: none;
         }
         .tab-bar {
             display: flex;
@@ -42,10 +32,10 @@
             border: none;
             border-radius: 8px;
             background: transparent;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.82rem;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 600;
             color: #555;
         }
         .tab-bar button.ativo {
@@ -61,32 +51,33 @@
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .card h3 { color: #1a237e; margin-bottom: 10px; }
+        .card h3 { color: #1a237e; margin-bottom: 8px; }
         .dados-box {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', monospace;
             font-size: 0.85rem;
-            background: #212121;
+            background: #1e1e1e;
             color: #00e676;
             padding: 12px;
             border-radius: 8px;
             white-space: pre-wrap;
             line-height: 1.4;
-            min-height: 80px;
+            min-height: 90px;
             word-break: break-all;
         }
         video { width: 100%; border-radius: 8px; background: #000; }
-        button.btn-action {
+        button.btn-app {
             padding: 10px 14px;
             border: none;
             border-radius: 8px;
             background: #1a237e;
             color: white;
-            font-size: 0.85rem;
-            font-weight: 500;
             cursor: pointer;
             margin: 4px 2px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
-        button.btn-action:disabled { opacity: 0.5; }
+        button.btn-app:disabled { opacity: 0.5; }
+        .status-container { margin-bottom: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
         .status { 
             display: inline-block; 
             padding: 3px 8px; 
@@ -96,25 +87,27 @@
         }
         .verde { background: #4CAF50; color: white; }
         .vermelho { background: #f44336; color: white; }
+        .amarelo { background: #ff9800; color: white; }
+        .dica {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
     </style>
 </head>
 <body>
-
-    <!-- AVISO DE CONTEXTO NÃO SEGURO -->
-    <div id="alerta-contexto" class="alerta-https">
-        ⚠️ <strong>Atenção:</strong> Você abriu este arquivo diretamente como <code>file://</code> ou <code>http://</code>. Sensores como GPS, Câmera e Giroscópio <strong>só funcionam via HTTPS</strong> ou <strong>localhost</strong>.
-    </div>
 
     <!-- TABS -->
     <div class="tab-bar">
         <button class="ativo" data-tab="tab-portos">🚢 Portos</button>
         <button data-tab="tab-camera">📷 Câmera</button>
         <button data-tab="tab-gps">📍 GPS</button>
-        <button data-tab="tab-sensores">📱 Sensores</button>
+        <button data-tab="tab-sensores">📱 Giro/Acel</button>
         <button data-tab="tab-bluetooth">🔵 BT</button>
     </div>
 
-    <!-- TAB: PORTOS (JSON) -->
+    <!-- TAB: PORTOS -->
     <div id="tab-portos" class="tab ativo">
         <div class="card">
             <h3>⚓ Catálogo de Portos</h3>
@@ -131,9 +124,9 @@
             <h3>📷 Câmera</h3>
             <video id="video" autoplay playsinline></video>
             <div style="margin-top:8px;">
-                <button class="btn-action" id="btn-cam-front">🔁 Alternar</button>
-                <button class="btn-action" id="btn-cam-capture">📸 Foto</button>
-                <button class="btn-action" id="btn-cam-stop">⏹ Parar</button>
+                <button class="btn-app" id="btn-cam-front">🔁 Alternar</button>
+                <button class="btn-app" id="btn-cam-capture">📸 Foto</button>
+                <button class="btn-app" id="btn-cam-stop">⏹ Parar</button>
             </div>
             <img id="cam-preview" style="display:none;width:100%;border-radius:8px;margin-top:8px;" />
             <canvas id="cam-canvas" style="display:none;"></canvas>
@@ -143,27 +136,36 @@
     <!-- TAB: GPS -->
     <div id="tab-gps" class="tab">
         <div class="card">
-            <h3>📍 Geolocalização</h3>
-            <div id="gps-info" class="dados-box">Toque em "Obter Posição" ou "Rastrear"</div>
-            <div style="margin-top:10px;">
-                <button class="btn-action" id="btn-gps-once">📍 Obter Posição</button>
-                <button class="btn-action" id="btn-gps-watch">👁️ Rastrear</button>
+            <h3>📍 Geolocalização (Chrome Android)</h3>
+            <div class="status-container">
+                <span id="gps-perm-status" class="status amarelo">Permissão: Checando...</span>
+            </div>
+            <div id="gps-info" class="dados-box">Toque em "Obter Localização".</div>
+            <div style="margin-top:8px;">
+                <button class="btn-app" id="btn-gps-once">📍 Obter Localização</button>
+                <button class="btn-app" id="btn-gps-watch">👁️ Rastrear</button>
+            </div>
+            <div class="dica">
+                ℹ️ <strong>Se não responder:</strong> Verifique se a <em>Localização</em> está ativada no topo do Android e toque no ícone de <strong>Ajustes/Cadeado ao lado da URL</strong> no Chrome para permitir.
             </div>
         </div>
     </div>
 
-    <!-- TAB: SENSORES (GIROSCÓPIO E ACELERÔMETRO) -->
+    <!-- TAB: SENSORES -->
     <div id="tab-sensores" class="tab">
         <div class="card">
-            <h3>📱 Sensores Físicos</h3>
-            <div style="margin-bottom: 10px;">
-                <span id="sens-status-acel" class="status vermelho">⏹ Acelerômetro</span>
+            <h3>📱 Giroscópio & Acelerômetro</h3>
+            <div class="status-container">
                 <span id="sens-status-giro" class="status vermelho">⏹ Giroscópio</span>
+                <span id="sens-status-acel" class="status vermelho">⏹ Acelerômetro</span>
             </div>
-            <div id="sens-dados" class="dados-box">Toque em "▶ Iniciar Sensores" para ligar o giroscópio e acelerômetro.</div>
-            <div style="margin-top:10px;">
-                <button class="btn-action" id="btn-sens-start">▶ Iniciar Sensores</button>
-                <button class="btn-action" id="btn-sens-stop">⏹ Parar</button>
+            <div id="sens-dados" class="dados-box">Toque em "▶ Iniciar Sensores".</div>
+            <div style="margin-top:8px;">
+                <button class="btn-app" id="btn-sens-start">▶ Iniciar Sensores</button>
+                <button class="btn-app" id="btn-sens-stop">⏹ Parar</button>
+            </div>
+            <div class="dica">
+                ℹ️ <strong>No Chrome Android:</strong> Se não mexer os números, abra <code>chrome://settings/content/sensors</code> e garanta que <em>"Sensores de movimento"</em> estão permitidos.
             </div>
         </div>
     </div>
@@ -171,34 +173,25 @@
     <!-- TAB: BLUETOOTH -->
     <div id="tab-bluetooth" class="tab">
         <div class="card">
-            <h3>🔵 Bluetooth</h3>
+            <h3>🔵 Bluetooth Web</h3>
             <div id="bt-dados" class="dados-box">Clique em "Escanear"</div>
-            <div style="margin-top:10px;">
-                <button class="btn-action" id="btn-bt-scan">📡 Escanear</button>
-                <button class="btn-action" id="btn-bt-disconnect" disabled>⏹ Desconectar</button>
+            <div style="margin-top:8px;">
+                <button class="btn-app" id="btn-bt-scan">📡 Escanear</button>
+                <button class="btn-app" id="btn-bt-disconnect" disabled>⏹ Desconectar</button>
             </div>
         </div>
     </div>
 
     <script>
         // ============================================
-        // 0. VERIFICAÇÃO DE SEGURANÇA (HTTPS)
-        // ============================================
-        const isSecure = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (!isSecure) {
-            document.getElementById('alerta-contexto').style.display = 'block';
-        }
-
-        // ============================================
-        // 1. PORTOS (JSON)
+        // 1. PORTOS
         // ============================================
         const portosContainer = document.getElementById('portos-container');
         const updateTime = document.getElementById('update-time');
-
         const portosData = [
             { nome: 'Porto de Santos', localizacao: 'Santos, SP', descricao: 'Maior porto da América Latina' },
-            { nome: 'Porto do Rio', localizacao: 'Rio de Janeiro, RJ', descricao: 'Porto histórico e turístico' },
-            { nome: 'Porto de Paranaguá', localizacao: 'Paranaguá, PR', descricao: 'Exportação de grãos e granéis' }
+            { nome: 'Porto do Rio', localizacao: 'Rio de Janeiro, RJ', descricao: 'Porto histórico' },
+            { nome: 'Porto de Paranaguá', localizacao: 'Paranaguá, PR', descricao: 'Exportação de grãos' }
         ];
 
         function renderizarPortos() {
@@ -232,7 +225,7 @@
                 video.srcObject = camStream;
                 await video.play();
             } catch (e) {
-                console.warn('Erro ao abrir câmera:', e.message);
+                console.warn('Câmera:', e.message);
             }
         }
 
@@ -259,169 +252,191 @@
         });
 
         // ============================================
-        // 3. GPS (COM TIMEOUT E TRATAMENTO DE ERROS)
+        // 3. GPS (COM SMART-FALLBACK PARA CHROME ANDROID)
         // ============================================
         const gpsInfo = document.getElementById('gps-info');
+        const gpsPermStatus = document.getElementById('gps-perm-status');
         let watchId = null;
 
-        const gpsOptions = {
-            enableHighAccuracy: true,
-            timeout: 10000,    // Se demorar mais de 10s, chama o erro em vez de travar
-            maximumAge: 0
-        };
+        // Monitor de permissão no Chrome
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(res => {
+                atualizarStatusGPS(res.state);
+                res.onchange = () => atualizarStatusGPS(res.state);
+            }).catch(() => {});
+        }
 
-        function atualizarGPS(pos) {
+        function atualizarStatusGPS(state) {
+            if (state === 'granted') {
+                gpsPermStatus.className = 'status verde';
+                gpsPermStatus.textContent = 'Permissão: Concedida ✅';
+            } else if (state === 'prompt') {
+                gpsPermStatus.className = 'status amarelo';
+                gpsPermStatus.textContent = 'Permissão: Aguardando toque 👆';
+            } else {
+                gpsPermStatus.className = 'status vermelho';
+                gpsPermStatus.textContent = 'Permissão: Bloqueada no Chrome 🚫';
+            }
+        }
+
+        function sucessoGPS(pos, modo) {
             const { latitude, longitude, accuracy, altitude, speed } = pos.coords;
             gpsInfo.textContent = 
-                `✅ Posição Fixada!\n` +
+                `✅ LOCALIZAÇÃO FIXADA (${modo})!\n` +
                 `Latitude:  ${latitude.toFixed(6)}°\n` +
                 `Longitude: ${longitude.toFixed(6)}°\n` +
                 `Precisão:  ${accuracy.toFixed(1)} metros\n` +
-                `Altitude:  ${altitude ? altitude.toFixed(1) + ' m' : 'Indisponível'}\n` +
-                `Velocid.:  ${speed ? (speed * 3.6).toFixed(1) + ' km/h' : '0 km/h'}\n` +
+                `Altitude:  ${altitude !== null ? altitude.toFixed(1) + ' m' : 'N/A'}\n` +
+                `Velocid.:  ${speed !== null ? (speed * 3.6).toFixed(1) + ' km/h' : '0 km/h'}\n` +
                 `Hora:      ${new Date(pos.timestamp).toLocaleTimeString()}`;
+            atualizarStatusGPS('granted');
         }
 
-        function erroGPS(err) {
-            let msg = '';
-            switch(err.code) {
-                case 1: msg = 'Permissão negada pelo usuário.'; break;
-                case 2: msg = 'Posição indisponível (verifique se a localização do celular está ligada).'; break;
-                case 3: msg = 'Tempo esgotado ao buscar sinal de satélite.'; break;
-                default: msg = err.message;
-            }
-            gpsInfo.textContent = `❌ Erro GPS (${err.code}):\n${msg}\n\n💡 Dica: Certifique-se de que a localização está ativada no celular e que está rodando em HTTPS.`;
+        function obterLocalizacaoRobusta() {
+            gpsInfo.textContent = '⏳ [1/2] Buscando via Satélite/GPS de alta precisão...';
+
+            // 1ª Tentativa: Alta precisão (GPS) com timeout curto (4 segundos)
+            navigator.geolocation.getCurrentPosition(
+                pos => sucessoGPS(pos, 'GPS Alta Precisão'),
+                err => {
+                    // 2ª Tentativa: Fallback imediato para Rede / Wi-Fi / Antenas (Funciona em ambientes fechados)
+                    gpsInfo.textContent = '⏳ [2/2] Satélite lento. Alternando para modo Rede/Wi-Fi...';
+                    navigator.geolocation.getCurrentPosition(
+                        pos => sucessoGPS(pos, 'Rede/Wi-Fi Rápido'),
+                        errFinal => {
+                            let msg = errFinal.message;
+                            if (errFinal.code === 1) msg = 'Permissão negada. Toque no ícone de configurações ao lado do link do site para liberar.';
+                            if (errFinal.code === 2) msg = 'A localização do Android está DESLIGADA no menu de atalhos do celular.';
+                            gpsInfo.textContent = `❌ Falha na Localização (${errFinal.code}):\n${msg}`;
+                        },
+                        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+                    );
+                },
+                { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
+            );
         }
 
-        document.getElementById('btn-gps-once').addEventListener('click', () => {
-            if (!navigator.geolocation) {
-                gpsInfo.textContent = '❌ Geolocalização não é suportada por este navegador.';
-                return;
-            }
-            gpsInfo.textContent = '⏳ Buscando coordenadas GPS (aguarde até 10s)...';
-            navigator.geolocation.getCurrentPosition(atualizarGPS, erroGPS, gpsOptions);
-        });
+        document.getElementById('btn-gps-once').addEventListener('click', obterLocalizacaoRobusta);
 
         document.getElementById('btn-gps-watch').addEventListener('click', () => {
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
-                gpsInfo.textContent = '⏹ Rastreamento contínuo finalizado.';
+                gpsInfo.textContent = '⏹ Rastreamento finalizado.';
                 document.getElementById('btn-gps-watch').textContent = '👁️ Rastrear';
                 return;
             }
-            if (!navigator.geolocation) {
-                gpsInfo.textContent = '❌ Geolocalização não suportada.';
-                return;
-            }
-            gpsInfo.textContent = '👁️ Rastreando em tempo real... Mova-se com o celular.';
+            gpsInfo.textContent = '👁️ Rastreamento contínuo ativado...';
             document.getElementById('btn-gps-watch').textContent = '⏹ Parar Rastreio';
-            watchId = navigator.geolocation.watchPosition(atualizarGPS, erroGPS, gpsOptions);
+            watchId = navigator.geolocation.watchPosition(
+                pos => sucessoGPS(pos, 'Tempo Real'),
+                err => gpsInfo.textContent = `❌ Erro: ${err.message}`,
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
+            );
         });
 
         // ============================================
-        // 4. SENSORES (GIROSCÓPIO E ACELERÔMETRO)
+        // 4. SENSORES (OTIMIZADO PARA CHROME ANDROID)
         // ============================================
         const sensDados = document.getElementById('sens-dados');
         const sensStatusAcel = document.getElementById('sens-status-acel');
         const sensStatusGiro = document.getElementById('sens-status-giro');
+
         let sensRunning = false;
+        let eventosGiro = 0;
+        let eventosAcel = 0;
+        let alpha = 0, beta = 0, gamma = 0;
+        let ax = 0, ay = 0, az = 0;
+        let sensorNativo = null;
 
-        let dadosGiro = { alpha: null, beta: null, gamma: null, type: '' };
-        let dadosAcel = { x: null, y: null, z: null };
-
-        function atualizarTelaSensores() {
-            let txt = '';
-
-            // Bloco do Giroscópio
-            if (dadosGiro.alpha !== null) {
-                txt += `🔄 GIROSCÓPIO / INCLINAÇÃO (${dadosGiro.type}):\n`;
-                txt += `  Alpha (Bússola/Z): ${Number(dadosGiro.alpha).toFixed(1)}°\n`;
-                txt += `  Beta  (Frente/Y):  ${Number(dadosGiro.beta).toFixed(1)}°\n`;
-                txt += `  Gamma (Lados/X):   ${Number(dadosGiro.gamma).toFixed(1)}°\n\n`;
-            } else {
-                txt += `🔄 GIROSCÓPIO: Aguardando detecção...\n\n`;
-            }
-
-            // Bloco do Acelerômetro
-            if (dadosAcel.x !== null) {
-                txt += `📊 ACELERÔMETRO:\n`;
-                txt += `  Eixo X: ${Number(dadosAcel.x).toFixed(2)} m/s²\n`;
-                txt += `  Eixo Y: ${Number(dadosAcel.y).toFixed(2)} m/s²\n`;
-                txt += `  Eixo Z: ${Number(dadosAcel.z).toFixed(2)} m/s²\n`;
-            } else {
-                txt += `📊 ACELERÔMETRO: Aguardando detecção...`;
-            }
-
-            sensDados.textContent = txt;
+        function atualizarDisplaySensores(fonte) {
+            sensDados.textContent = 
+                `🔄 GIROSCÓPIO [${fonte}] (${eventosGiro} msgs):\n` +
+                `  Alpha (Bússola/Z): ${alpha.toFixed(1)}°\n` +
+                `  Beta  (Frente/Y):  ${beta.toFixed(1)}°\n` +
+                `  Gamma (Lados/X):   ${gamma.toFixed(1)}°\n\n` +
+                `📊 ACELERÔMETRO (${eventosAcel} msgs):\n` +
+                `  X: ${ax.toFixed(2)} m/s²\n` +
+                `  Y: ${ay.toFixed(2)} m/s²\n` +
+                `  Z: ${az.toFixed(2)} m/s²`;
         }
 
-        function handleOrientation(e) {
+        // Handler para Android Chrome (deviceorientation e deviceorientationabsolute)
+        function handleOrientationAndroid(e) {
             if (!sensRunning) return;
             if (e.alpha !== null || e.beta !== null || e.gamma !== null) {
-                dadosGiro.alpha = e.alpha || 0;
-                dadosGiro.beta = e.beta || 0;
-                dadosGiro.gamma = e.gamma || 0;
-                dadosGiro.type = e.absolute ? 'Absoluto' : 'Relativo';
-
+                eventosGiro++;
+                alpha = e.alpha || 0;
+                beta = e.beta || 0;
+                gamma = e.gamma || 0;
                 sensStatusGiro.className = 'status verde';
-                sensStatusGiro.textContent = '✅ Giroscópio Ativo';
-                atualizarTelaSensores();
+                sensStatusGiro.textContent = '✅ Giroscópio';
+                atualizarDisplaySensores(e.absolute ? 'Absoluto Chrome' : 'Orientação');
             }
         }
 
-        function handleMotion(e) {
+        function handleMotionAndroid(e) {
             if (!sensRunning) return;
-            const acc = e.acceleration?.x !== null && e.acceleration?.x !== undefined 
-                ? e.acceleration 
-                : e.accelerationIncludingGravity;
-
-            if (acc && (acc.x !== null || acc.y !== null)) {
-                dadosAcel.x = acc.x || 0;
-                dadosAcel.y = acc.y || 0;
-                dadosAcel.z = acc.z || 0;
-
+            const a = e.acceleration?.x !== null && e.acceleration?.x !== undefined ? e.acceleration : e.accelerationIncludingGravity;
+            if (a && (a.x !== null || a.y !== null)) {
+                eventosAcel++;
+                ax = a.x || 0;
+                ay = a.y || 0;
+                az = a.z || 0;
                 sensStatusAcel.className = 'status verde';
-                sensStatusAcel.textContent = '✅ Acelerômetro Ativo';
-                atualizarTelaSensores();
+                sensStatusAcel.textContent = '✅ Acelerômetro';
+                atualizarDisplaySensores('Movimento');
+            }
+        }
+
+        // Tenta também a API moderna do Chrome Android (Generic Sensor API)
+        function iniciarGenericSensorsChrome() {
+            if ('AbsoluteOrientationSensor' in window) {
+                try {
+                    sensorNativo = new AbsoluteOrientationSensor({ frequency: 60 });
+                    sensorNativo.addEventListener('reading', () => {
+                        if (!sensRunning) return;
+                        eventosGiro++;
+                        // Converte quaternion para Euler aproximado se disponível
+                        const q = sensorNativo.quaternion;
+                        alpha = Math.atan2(2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2])) * (180/Math.PI);
+                        sensStatusGiro.className = 'status verde';
+                        sensStatusGiro.textContent = '✅ Giro Nativo';
+                        atualizarDisplaySensores('GenericSensor Chrome');
+                    });
+                    sensorNativo.start();
+                } catch (e) {
+                    console.log('Generic Sensor fallback:', e);
+                }
             }
         }
 
         document.getElementById('btn-sens-start').addEventListener('click', async () => {
-            // Verificação de permissões iOS (Safari 13+)
-            try {
-                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    const resMotion = await DeviceMotionEvent.requestPermission();
-                    if (resMotion !== 'granted') throw new Error('Permissão de acelerômetro recusada.');
-                }
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    const resOrient = await DeviceOrientationEvent.requestPermission();
-                    if (resOrient !== 'granted') throw new Error('Permissão de giroscópio recusada.');
-                }
-            } catch (err) {
-                sensDados.textContent = `❌ Erro de Permissão:\n${err.message}`;
-                return;
-            }
-
             sensRunning = true;
-            sensDados.textContent = '⏳ Escutando sensores de orientação e movimento... Mova o celular!';
+            eventosGiro = 0;
+            eventosAcel = 0;
+            sensDados.textContent = '⏳ Escutando sensores do Chrome... Movimente o aparelho!';
 
-            // Registra múltiplos eventos para cobrir Chrome Android e Safari iOS
-            window.addEventListener('deviceorientation', handleOrientation, true);
-            window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-            window.addEventListener('devicemotion', handleMotion, true);
+            // 1. Liga os eventos do Chrome Android
+            window.addEventListener('deviceorientationabsolute', handleOrientationAndroid, true);
+            window.addEventListener('deviceorientation', handleOrientationAndroid, true);
+            window.addEventListener('devicemotion', handleMotionAndroid, true);
+
+            // 2. Liga motor nativo do Chrome
+            iniciarGenericSensorsChrome();
         });
 
         document.getElementById('btn-sens-stop').addEventListener('click', () => {
             sensRunning = false;
-            window.removeEventListener('deviceorientation', handleOrientation, true);
-            window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
-            window.removeEventListener('devicemotion', handleMotion, true);
+            window.removeEventListener('deviceorientationabsolute', handleOrientationAndroid, true);
+            window.removeEventListener('deviceorientation', handleOrientationAndroid, true);
+            window.removeEventListener('devicemotion', handleMotionAndroid, true);
+            if (sensorNativo) {
+                try { sensorNativo.stop(); } catch(e){}
+                sensorNativo = null;
+            }
 
-            dadosGiro = { alpha: null, beta: null, gamma: null, type: '' };
-            dadosAcel = { x: null, y: null, z: null };
-
-            sensDados.textContent = '⏹ Sensores desligados.';
+            sensDados.textContent = '⏹ Sensores parados.';
             sensStatusAcel.className = 'status vermelho';
             sensStatusAcel.textContent = '⏹ Acelerômetro';
             sensStatusGiro.className = 'status vermelho';
@@ -439,19 +454,18 @@
 
         btScan.addEventListener('click', async () => {
             if (!navigator.bluetooth) {
-                btDados.textContent = '❌ Web Bluetooth não suportado neste navegador (funciona no Chrome Android).';
+                btDados.textContent = '❌ Web Bluetooth não disponível.';
                 return;
             }
             try {
-                btDados.textContent = '⏳ Buscando aparelhos...';
+                btDados.textContent = '⏳ Buscando aparelhos Bluetooth...';
                 btScan.disabled = true;
                 btDevice = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: ['battery_service']
                 });
-                btDados.textContent = `✅ Pareado: ${btDevice.name || 'Dispositivo Desconhecido'}`;
+                btDados.textContent = `✅ Conectado a: ${btDevice.name || 'Dispositivo Desconhecido'}`;
                 btServer = await btDevice.gatt.connect();
-                btDados.textContent += `\n🔗 Conectado com sucesso!`;
                 btDisconnect.disabled = false;
             } catch (e) {
                 if (!e.message.includes('User cancelled')) {
@@ -474,7 +488,7 @@
         });
 
         // ============================================
-        // TABS
+        // NAVEGAÇÃO DE ABAS
         // ============================================
         document.querySelectorAll('.tab-bar button').forEach(btn => {
             btn.addEventListener('click', () => {
