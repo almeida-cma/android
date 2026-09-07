@@ -11,34 +11,49 @@ jobs:
       - name: Baixar projeto
         uses: actions/checkout@v4
 
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: Criar projeto Node
-        run: npm init -y
-
-      - name: Instalar Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Criar pasta web
+      - name: Criar projeto
         run: |
-          mkdir www
-          cp ./*.html ./www/ 2>/dev/null || true
-          cp -r ./css ./www/ 2>/dev/null || true
-          cp -r ./js ./www/ 2>/dev/null || true
-          cp -r ./images ./www/ 2>/dev/null || true
-          cp -r ./img ./www/ 2>/dev/null || true
-          cp -r ./assets ./www/ 2>/dev/null || true
+          npm init -y
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
 
-      - name: Criar configuração do Capacitor
+      - name: Criar página mínima
+        run: |
+          mkdir -p www
+          cat > www/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Almeida App</title>
+          </head>
+          <body>
+            <p>Carregando...</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Configurar Capacitor
         run: |
           cat > capacitor.config.json <<'EOF'
           {
             "appId": "com.almeida.android",
             "appName": "Almeida App",
-            "webDir": "www"
+            "webDir": "www",
+            "server": {
+              "url": "https://almeida-cma.github.io/android/",
+              "cleartext": false
+            }
           }
           EOF
 
@@ -47,12 +62,6 @@ jobs:
 
       - name: Sincronizar
         run: npx cap sync android
-
-      - name: Configurar Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 21
 
       - name: Gerar APK
         working-directory: android
