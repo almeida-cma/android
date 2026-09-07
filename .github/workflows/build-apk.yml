@@ -1,0 +1,67 @@
+```yaml
+name: Gerar APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Criar projeto Node
+        run: npm init -y
+
+      - name: Instalar Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Criar pasta web
+        run: |
+          mkdir www
+          cp -r ./*.html ./www/ 2>/dev/null || true
+          cp -r ./css ./www/ 2>/dev/null || true
+          cp -r ./js ./www/ 2>/dev/null || true
+          cp -r ./images ./www/ 2>/dev/null || true
+          cp -r ./img ./www/ 2>/dev/null || true
+          cp -r ./assets ./www/ 2>/dev/null || true
+
+      - name: Criar configuração do Capacitor
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.almeida.android",
+            "appName": "Almeida App",
+            "webDir": "www"
+          }
+          EOF
+
+      - name: Adicionar Android
+        run: npx cap add android
+
+      - name: Sincronizar
+        run: npx cap sync android
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gerar APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Almeida-App-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+```
